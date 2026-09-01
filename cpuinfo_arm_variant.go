@@ -1,3 +1,5 @@
+//go:build linux && (arm || arm64)
+
 /*
    Copyright The containerd Authors.
 
@@ -15,6 +17,12 @@
 */
 
 package platforms
+
+// This file intentionally does not rely on filename-based build tag
+// inference: a "cpuinfo_linux_arm.go" name would make Go infer linux&&arm
+// only, silently dropping arm64 from the build. The "_variant" suffix keeps
+// the filename from matching any GOARCH, so the explicit tag above is the
+// only constraint in effect; cpuinfo_arm_other.go carries its exact negation.
 
 import (
 	"bufio"
@@ -72,44 +80,57 @@ func getCPUInfo(pattern string) (info string, err error) {
 	return "", fmt.Errorf("getCPUInfo for pattern %s: %w", pattern, errNotFound)
 }
 
-// getCPUVariantFromArch get CPU variant from arch through a system call
-func getCPUVariantFromArch(arch string) (string, error) {
-	var variant string
-
+// getARMVariantFromArch gets CPU variant from the uname machine field
+// (e.g. "armv7l", "aarch64"), used when /proc/cpuinfo has no "Cpu
+// architecture" field.
+func getARMVariantFromArch(arch string) (string, error) {
 	arch = strings.ToLower(arch)
 
 	if arch == "aarch64" {
-		variant = "8"
-	} else if arch[0:4] == "armv" && len(arch) >= 5 {
+		return "v8", nil
+	}
+	if arch[0:4] == "armv" && len(arch) >= 5 {
 		// Valid arch format is in form of armvXx
 		switch arch[3:5] {
 		case "v8":
-			variant = "8"
+			return "v8", nil
 		case "v7":
-			variant = "7"
+			return "v7", nil
 		case "v6":
-			variant = "6"
+			return "v6", nil
 		case "v5":
-			variant = "5"
-		case "v4":
-			variant = "4"
-		case "v3":
-			variant = "3"
+			return "v5", nil
 		default:
-			variant = "unknown"
+			return "unknown", nil
 		}
-	} else {
-		return "", fmt.Errorf("getCPUVariantFromArch invalid arch: %s, %w", arch, errInvalidArgument)
 	}
-	return variant, nil
+	return "", fmt.Errorf("getARMVariantFromArch invalid arch: %s, %w", arch, errInvalidArgument)
 }
 
-// getCPUVariant returns cpu variant for ARM
+// normalizeCPUArchitecture maps /proc/cpuinfo's "Cpu architecture" field to
+// a "vN" variant. Only for values read from that field; getARMVariantFromArch
+// normalizes the uname fallback separately.
+func normalizeCPUArchitecture(variant string) string {
+	switch strings.ToLower(variant) {
+	case "8", "aarch64":
+		return "v8"
+	case "7", "7m", "?(12)", "?(13)", "?(14)", "?(15)", "?(16)", "?(17)":
+		return "v7"
+	case "6", "6tej":
+		return "v6"
+	case "5", "5t", "5te", "5tej":
+		return "v5"
+	default:
+		return "unknown"
+	}
+}
+
+// getARMVariant returns cpu variant for ARM
 // We first try reading "Cpu architecture" field from /proc/cpuinfo
 // If we can't find it, then fall back using a system call
 // This is to cover running ARM in emulated environment on x86 host as this field in /proc/cpuinfo
 // was not present.
-func getCPUVariant() (string, error) {
+func getARMVariant() (string, error) {
 	variant, err := getCPUInfo("Cpu architecture")
 	if err != nil {
 		if errors.Is(err, errNotFound) {
@@ -119,13 +140,9 @@ func getCPUVariant() (string, error) {
 				return "", fmt.Errorf("failure getting machine architecture: %v", err)
 			}
 
-			variant, err = getCPUVariantFromArch(arch)
-			if err != nil {
-				return "", fmt.Errorf("failure getting CPU variant from machine architecture: %v", err)
-			}
-		} else {
-			return "", fmt.Errorf("failure getting CPU variant: %v", err)
+			return getARMVariantFromArch(arch)
 		}
+		return "", fmt.Errorf("failure getting CPU variant: %v", err)
 	}
 
 	// handle edge case for Raspberry Pi ARMv6 devices (which due to a kernel quirk, report "CPU architecture: 7")
@@ -137,22 +154,5 @@ func getCPUVariant() (string, error) {
 		}
 	}
 
-	switch strings.ToLower(variant) {
-	case "8", "aarch64":
-		variant = "v8"
-	case "7", "7m", "?(12)", "?(13)", "?(14)", "?(15)", "?(16)", "?(17)":
-		variant = "v7"
-	case "6", "6tej":
-		variant = "v6"
-	case "5", "5t", "5te", "5tej":
-		variant = "v5"
-	case "4", "4t":
-		variant = "v4"
-	case "3":
-		variant = "v3"
-	default:
-		variant = "unknown"
-	}
-
-	return variant, nil
+	return normalizeCPUArchitecture(variant), nil
 }
