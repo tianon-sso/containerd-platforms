@@ -1,3 +1,5 @@
+//go:build linux && (arm || arm64)
+
 /*
    Copyright The containerd Authors.
 
@@ -18,18 +20,13 @@ package platforms
 
 import (
 	"errors"
-	"runtime"
 	"testing"
 )
 
-func TestCPUVariant(t *testing.T) {
-	if !isArmArch(runtime.GOARCH) {
-		t.Skip("only relevant on linux/arm")
-	}
+func TestARMVariant(t *testing.T) {
+	variants := []string{"v8", "v7", "v6", "v5"}
 
-	variants := []string{"v8", "v7", "v6", "v5", "v4", "v3"}
-
-	p, err := getCPUVariant()
+	p, err := getARMVariant()
 	if err != nil {
 		t.Fatalf("Error getting CPU variant: %v", err)
 		return
@@ -45,7 +42,7 @@ func TestCPUVariant(t *testing.T) {
 	t.Fatalf("could not get valid variant as expected: %v", variants)
 }
 
-func TestGetCPUVariantFromArch(t *testing.T) {
+func TestGetARMVariantFromArch(t *testing.T) {
 	for _, testcase := range []struct {
 		name        string
 		input       string
@@ -55,43 +52,43 @@ func TestGetCPUVariantFromArch(t *testing.T) {
 		{
 			name:        "Test aarch64",
 			input:       "aarch64",
-			output:      "8",
+			output:      "v8",
 			expectedErr: nil,
 		},
 		{
 			name:        "Test Armv8 with capital",
 			input:       "Armv8",
-			output:      "8",
+			output:      "v8",
 			expectedErr: nil,
 		},
 		{
 			name:        "Test armv7",
 			input:       "armv7",
-			output:      "7",
+			output:      "v7",
 			expectedErr: nil,
 		},
 		{
 			name:        "Test armv6",
 			input:       "armv6",
-			output:      "6",
+			output:      "v6",
 			expectedErr: nil,
 		},
 		{
 			name:        "Test armv5",
 			input:       "armv5",
-			output:      "5",
+			output:      "v5",
 			expectedErr: nil,
 		},
 		{
 			name:        "Test armv4",
 			input:       "armv4",
-			output:      "4",
+			output:      "unknown",
 			expectedErr: nil,
 		},
 		{
 			name:        "Test armv3",
 			input:       "armv3",
-			output:      "3",
+			output:      "unknown",
 			expectedErr: nil,
 		},
 		{
@@ -116,7 +113,7 @@ func TestGetCPUVariantFromArch(t *testing.T) {
 		t.Run(testcase.name, func(t *testing.T) {
 			t.Logf("input: %v", testcase.input)
 
-			variant, err := getCPUVariantFromArch(testcase.input)
+			variant, err := getARMVariantFromArch(testcase.input)
 
 			if err == nil {
 				if testcase.expectedErr != nil {

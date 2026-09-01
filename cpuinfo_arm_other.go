@@ -1,4 +1,4 @@
-//go:build !linux
+//go:build !linux || (!arm && !arm64)
 
 /*
    Copyright The containerd Authors.
@@ -23,10 +23,18 @@ import (
 	"runtime"
 )
 
-func getCPUVariant() (string, error) {
+// getARMVariant is the fallback for every build except linux/arm and
+// linux/arm64 (see cpuinfo_arm_variant.go, which carries the exact
+// negation of this file's build tag).
+func getARMVariant() (string, error) {
 	var variant string
 
 	switch runtime.GOOS {
+	case "linux":
+		// Reached only for a non-ARM GOARCH (e.g. linux/amd64); the
+		// cpuVariant() dispatch in cpuinfo.go never calls getARMVariant()
+		// in that case, so this value is never actually used.
+		return "", nil
 	case "windows", "darwin":
 		// Windows/Darwin only supports v7 for ARM32 and v8 for ARM64 and so we can use
 		// runtime.GOARCH to determine the variants
@@ -48,7 +56,7 @@ func getCPUVariant() (string, error) {
 			variant = "unknown"
 		}
 	default:
-		return "", fmt.Errorf("getCPUVariant for OS %s: %v", runtime.GOOS, errNotImplemented)
+		return "", fmt.Errorf("getARMVariant for OS %s: %v", runtime.GOOS, errNotImplemented)
 	}
 
 	return variant, nil

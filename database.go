@@ -37,17 +37,6 @@ func isKnownOS(os string) bool {
 	return false
 }
 
-// isArmArch returns true if the architecture is ARM.
-//
-// The arch value should be normalized before being passed to this function.
-func isArmArch(arch string) bool {
-	switch arch {
-	case "arm", "arm64":
-		return true
-	}
-	return false
-}
-
 // isKnownArch returns true if we know about the architecture.
 //
 // The arch value should be normalized before being passed to this function.

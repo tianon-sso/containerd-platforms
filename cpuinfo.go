@@ -23,21 +23,29 @@ import (
 	"github.com/containerd/log"
 )
 
-// Present the ARM instruction set architecture, eg: v7, v8
-// Don't use this value directly; call cpuVariant() instead.
-var cpuVariantValue string
-
-var cpuVariantOnce sync.Once
-
-func cpuVariant() string {
-	cpuVariantOnce.Do(func() {
-		if isArmArch(runtime.GOARCH) {
-			var err error
-			cpuVariantValue, err = getCPUVariant()
-			if err != nil {
-				log.L.Errorf("Error getCPUVariant for OS %s: %v", runtime.GOOS, err)
-			}
-		}
-	})
-	return cpuVariantValue
-}
+// cpuVariant returns the detected CPU variant, e.g. v5/v6/v7/v8 (arm),
+// v2/v3/v4 (amd64), power8/power9/power10 (ppc64le),
+// rva20u64/rva22u64/rva23u64 (riscv64). Empty if the architecture has no
+// variant concept, or detection found nothing conclusive.
+var cpuVariant = sync.OnceValue(func() string {
+	var (
+		variant string
+		err     error
+	)
+	switch runtime.GOARCH {
+	case "arm", "arm64":
+		variant, err = getARMVariant()
+	case "amd64":
+		variant, err = getAMD64Variant()
+	case "ppc64le":
+		variant, err = getPPC64LEVariant()
+	case "riscv64":
+		variant, err = getRISCV64Variant()
+	default:
+		return ""
+	}
+	if err != nil {
+		log.L.Errorf("Error detecting CPU variant for %s/%s: %v", runtime.GOOS, runtime.GOARCH, err)
+	}
+	return variant
+})
