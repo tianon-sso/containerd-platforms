@@ -17,6 +17,8 @@
 package platforms
 
 import (
+	"cmp"
+
 	specs "github.com/opencontainers/image-spec/specs-go/v1"
 )
 
@@ -169,38 +171,45 @@ func archRank(hostArch, arch string) int {
 }
 
 func (c *onlyComparer) Less(p1, p2 specs.Platform) bool {
+	return c.compare(p1, p2) < 0
+}
+
+func (c *onlyComparer) compare(p1, p2 specs.Platform) int {
 	n1, n2 := Normalize(p1), Normalize(p2)
 
 	// Prefer the host's own OS over any other; otherwise alphabetically.
 	native1, native2 := n1.OS == c.platform.OS, n2.OS == c.platform.OS
 	if native1 != native2 {
-		return native1
+		if native1 {
+			return -1
+		}
+		return 1
 	}
 	if n1.OS != n2.OS {
-		return naturalLess(n1.OS, n2.OS)
+		return naturalCompare(n1.OS, n2.OS)
 	}
 
 	// Prefer the host's own architecture, then its recognized fallback
 	// architecture, then alphabetically.
 	a1, a2 := archRank(c.platform.Architecture, n1.Architecture), archRank(c.platform.Architecture, n2.Architecture)
 	if a1 != a2 {
-		return a1 > a2
+		return cmp.Compare(a2, a1)
 	}
 	if n1.Architecture != n2.Architecture {
-		return naturalLess(n1.Architecture, n2.Architecture)
+		return naturalCompare(n1.Architecture, n2.Architecture)
 	}
 
 	// Then variant and OS version, newest/highest first.
 	if n1.Variant != n2.Variant {
-		return naturalLess(n2.Variant, n1.Variant)
+		return naturalCompare(n2.Variant, n1.Variant)
 	}
 	if p1.OSVersion != p2.OSVersion {
-		return naturalLess(p2.OSVersion, p1.OSVersion)
+		return naturalCompare(p2.OSVersion, p1.OSVersion)
 	}
 
 	// Tied on everything above: prefer the one whose OS features overlap
 	// more with what the host actually declares.
-	return c.featureOverlap(p1) > c.featureOverlap(p2)
+	return cmp.Compare(c.featureOverlap(p2), c.featureOverlap(p1))
 }
 
 // OnlyOS returns a match comparer that matches only platforms with the same

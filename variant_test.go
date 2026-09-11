@@ -154,27 +154,27 @@ func TestCompareVersions(t *testing.T) {
 	}
 }
 
-func TestNaturalLess(t *testing.T) {
+func TestNaturalCompare(t *testing.T) {
 	for _, tc := range []struct {
 		a, b string
-		want bool
+		want int
 	}{
-		{"power9", "power10", true},
-		{"power10", "power9", false},
-		{"v8.5", "v8.10", true},
-		{"v8.10", "v8.5", false},
-		{"rva20u64", "rva23u64", true},
-		{"rva23u64", "rva20u64", false},
-		{"v9", "v9", false},
-		{"v9", "v9.0", true}, // shorter string, otherwise identical, sorts first
-		{"", "a", true},
-		{"9", "09", true}, // numerically equal; fewer leading zeros sorts first
-		{"09", "9", false},
-		{"abc", "abd", true},
+		{"power9", "power10", -1},
+		{"power10", "power9", 1},
+		{"v8.5", "v8.10", -1},
+		{"v8.10", "v8.5", 1},
+		{"rva20u64", "rva23u64", -1},
+		{"rva23u64", "rva20u64", 1},
+		{"v9", "v9", 0},
+		{"v9", "v9.0", -1}, // shorter string, otherwise identical, sorts first
+		{"", "a", -1},
+		{"9", "09", -1}, // numerically equal; fewer leading zeros sorts first
+		{"09", "9", 1},
+		{"abc", "abd", -1},
 	} {
 		t.Run(tc.a+"_"+tc.b, func(t *testing.T) {
-			if got := naturalLess(tc.a, tc.b); got != tc.want {
-				t.Errorf("naturalLess(%q, %q) = %v, want %v", tc.a, tc.b, got, tc.want)
+			if got := naturalCompare(tc.a, tc.b); got != tc.want {
+				t.Errorf("naturalCompare(%q, %q) = %d, want %d", tc.a, tc.b, got, tc.want)
 			}
 		})
 	}

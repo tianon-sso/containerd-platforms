@@ -17,6 +17,7 @@
 package platforms
 
 import (
+	"cmp"
 	"strconv"
 	"strings"
 )
@@ -214,12 +215,14 @@ func arm64VariantMatch(hostVariant, imageVariant string) bool {
 	return false
 }
 
-// naturalLess reports whether a sorts before b in "natural" order: runs of
+// naturalCompare compares a and b in "natural" order: runs of
 // ASCII digits are compared as numbers (so "9" < "10"), and everything else
 // is compared as plain text. It has no knowledge of any particular variant
 // or version scheme's shape — it's the same ordering a file manager uses to
 // sort "power9" before "power10", or "v8.9" before "v8.10".
-func naturalLess(a, b string) bool {
+//
+// naturalCompare can be used as the comparison function for [slices.SortFunc].
+func naturalCompare(a, b string) int {
 	for len(a) > 0 && len(b) > 0 {
 		da, ra := splitLeadingDigits(a)
 		db, rb := splitLeadingDigits(b)
@@ -228,23 +231,23 @@ func naturalLess(a, b string) bool {
 			nb := strings.TrimLeft(db, "0")
 			switch {
 			case len(na) != len(nb):
-				return len(na) < len(nb)
+				return cmp.Compare(len(na), len(nb))
 			case na != nb:
-				return na < nb
+				return strings.Compare(na, nb)
 			case len(da) != len(db):
 				// Numerically equal (differing only in leading zeros):
 				// fewer leading zeros sorts first, for a total order.
-				return len(da) < len(db)
+				return cmp.Compare(len(da), len(db))
 			}
 			a, b = ra, rb
 			continue
 		}
 		if a[0] != b[0] {
-			return a[0] < b[0]
+			return cmp.Compare(a[0], b[0])
 		}
 		a, b = a[1:], b[1:]
 	}
-	return len(a) < len(b)
+	return cmp.Compare(len(a), len(b))
 }
 
 func splitLeadingDigits(s string) (digits, rest string) {
