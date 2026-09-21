@@ -119,30 +119,6 @@ func sameShapeNumbers(hostVariant, imageVariant string) (hostNumbers, imageNumbe
 	return h.numbers, i.numbers, true
 }
 
-// numberedVariantMatch reports whether an image declaring imageVariant can
-// run on a host declaring hostVariant, for architectures with a real
-// minimum ("floor") version — amd64 and arm — where a bare/empty variant is
-// that architecture's own canonical form for its floor version, rather than
-// "no requirement".
-func numberedVariantMatch(hostVariant, imageVariant, floorVariant string) bool {
-	if hostVariant == "" {
-		hostVariant = floorVariant
-	}
-	if imageVariant == "" {
-		imageVariant = floorVariant
-	}
-	if imageVariant == hostVariant {
-		return true
-	}
-
-	hostNumbers, imageNumbers, ok := sameShapeNumbers(hostVariant, imageVariant)
-	if !ok {
-		return false
-	}
-	floor, _ := parseVersionedVariant(floorVariant)
-	return compareVersions(imageNumbers, floor.numbers) >= 0 && compareVersions(imageNumbers, hostNumbers) <= 0
-}
-
 // genericVariantMatch handles any architecture without dedicated version
 // handling (e.g. ppc64le's "powerN", riscv64's "rvaNNu64"), purely by the
 // shape of the variant string rather than by architecture name. An image

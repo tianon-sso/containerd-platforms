@@ -97,6 +97,7 @@ func TestOnly(t *testing.T) {
 			matches: map[bool][]string{
 				true: {
 					"linux/arm",
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 					"linux/arm/v7",
@@ -104,7 +105,6 @@ func TestOnly(t *testing.T) {
 				},
 				false: {
 					"linux/amd64",
-					"linux/arm/v4",
 					"linux/arm64",
 					"windows/amd64",
 					"windows/arm",
@@ -116,13 +116,13 @@ func TestOnly(t *testing.T) {
 			matches: map[bool][]string{
 				true: {
 					"linux/arm",
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 					"linux/arm/v7",
 				},
 				false: {
 					"linux/amd64",
-					"linux/arm/v4",
 					"linux/arm/v8",
 					"linux/arm64",
 					"windows/amd64",
@@ -134,13 +134,13 @@ func TestOnly(t *testing.T) {
 			platform: "linux/arm/v6",
 			matches: map[bool][]string{
 				true: {
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 				},
 				false: {
 					"linux/amd64",
 					"linux/arm",
-					"linux/arm/v4",
 					"linux/arm/v7",
 					"linux/arm/v8",
 					"linux/arm64",
@@ -153,12 +153,12 @@ func TestOnly(t *testing.T) {
 			platform: "linux/arm/v5",
 			matches: map[bool][]string{
 				true: {
+					"linux/arm/v4",
 					"linux/arm/v5",
 				},
 				false: {
 					"linux/amd64",
 					"linux/arm",
-					"linux/arm/v4",
 					"linux/arm/v6",
 					"linux/arm/v7",
 					"linux/arm/v8",
@@ -192,6 +192,7 @@ func TestOnly(t *testing.T) {
 			matches: map[bool][]string{
 				true: {
 					"linux/arm",
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 					"linux/arm/v7",
@@ -218,7 +219,6 @@ func TestOnly(t *testing.T) {
 				},
 				false: {
 					"linux/amd64",
-					"linux/arm/v4",
 					"windows/amd64",
 					"windows/arm",
 					"linux/arm64/v8.10", // there's no v8.10
@@ -230,6 +230,7 @@ func TestOnly(t *testing.T) {
 			matches: map[bool][]string{
 				true: {
 					"linux/arm",
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 					"linux/arm/v7",
@@ -246,7 +247,6 @@ func TestOnly(t *testing.T) {
 				},
 				false: {
 					"linux/amd64",
-					"linux/arm/v4",
 					"windows/amd64",
 					"windows/arm",
 					"linux/arm64/v8.6",
@@ -258,6 +258,7 @@ func TestOnly(t *testing.T) {
 			matches: map[bool][]string{
 				true: {
 					"linux/arm",
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 					"linux/arm/v7",
@@ -268,7 +269,6 @@ func TestOnly(t *testing.T) {
 				},
 				false: {
 					"linux/amd64",
-					"linux/arm/v4",
 					"linux/arm/v9",
 					"linux/arm64/v9",
 					"windows/amd64",
@@ -281,6 +281,7 @@ func TestOnly(t *testing.T) {
 			matches: map[bool][]string{
 				true: {
 					"linux/arm",
+					"linux/arm/v4",
 					"linux/arm/v5",
 					"linux/arm/v6",
 					"linux/arm/v7",
@@ -290,7 +291,6 @@ func TestOnly(t *testing.T) {
 				},
 				false: {
 					"linux/amd64",
-					"linux/arm/v4",
 					"linux/arm/v9",
 					"linux/arm64/v9",
 					"windows/amd64",

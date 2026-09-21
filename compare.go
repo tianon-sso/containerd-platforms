@@ -116,25 +116,19 @@ func fallbackArch(hostArch string) string {
 // variant, or a recognized cross-architecture fallback (see fallbackArch)
 // with a compatible variant.
 //
-// For amd64, floors at v1 (see numberedVariantMatch) and also matches 386
-// via its fallback. For arm, floors at v5, so arm/v8 also matches arm/v7,
-// arm/v6 and arm/v5 (and so on down the chain). For arm64, see
-// arm64VariantMatch for its cross-generation offset. Any other architecture
-// falls back to genericVariantMatch's prefix/number/suffix comparison (e.g.
-// ppc64le's "powerN", riscv64's "rvaNNu64").
+// For arm64, see arm64VariantMatch for its cross-generation offset. Every
+// other architecture (including amd64 and arm) is handled by
+// genericVariantMatch's prefix/number/suffix comparison (e.g. ppc64le's
+// "powerN", riscv64's "rvaNNu64"), so arm/v8 also matches arm/v7, arm/v6 and
+// arm/v5 (and so on down the chain), and amd64 also matches 386 via its
+// fallback.
 func (c *onlyComparer) archMatch(p specs.Platform) bool {
 	normalized := Normalize(p)
 	if normalized.Architecture == c.platform.Architecture {
-		switch c.platform.Architecture {
-		case "amd64":
-			return numberedVariantMatch(c.platform.Variant, normalized.Variant, "v1")
-		case "arm":
-			return numberedVariantMatch(c.platform.Variant, normalized.Variant, "v5")
-		case "arm64":
+		if c.platform.Architecture == "arm64" {
 			return arm64VariantMatch(c.platform.Variant, normalized.Variant)
-		default:
-			return genericVariantMatch(c.platform.Variant, normalized.Variant)
 		}
+		return genericVariantMatch(c.platform.Variant, normalized.Variant)
 	}
 	if normalized.Architecture != fallbackArch(c.platform.Architecture) {
 		return false
@@ -144,7 +138,7 @@ func (c *onlyComparer) archMatch(p specs.Platform) bool {
 	case "amd64":
 		return true // 386 has no variant to check; it's a match-or-nothing fallback.
 	case "arm64":
-		return numberedVariantMatch("v8", normalized.Variant, "v5")
+		return genericVariantMatch("v8", normalized.Variant)
 	}
 	return false
 }

@@ -74,18 +74,6 @@ func TestParseVersionedVariantStopsAtUndottedDigits(t *testing.T) {
 	}
 }
 
-// TestNumberedVariantMatchHuge ensures compatibility between a host and
-// image is computed directly, with no cost proportional to the magnitude of
-// either variant's version number.
-func TestNumberedVariantMatchHuge(t *testing.T) {
-	if !numberedVariantMatch("v1000000000", "v999999999", "v1") {
-		t.Fatal("expected a huge but lower image version to match")
-	}
-	if numberedVariantMatch("v5", "v6", "v1") {
-		t.Fatal("expected higher image version to not match a lower host version")
-	}
-}
-
 func TestGenericVariantMatch(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
